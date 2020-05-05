@@ -227,8 +227,8 @@ INSERT INTO `cooking`.`constitutionRecette` (`codeRecette`,`codeProduit`,`quanti
     
 
 -- (2) Insertion dans la table panier 
-INSERT INTO `cooking`.`panier` (`codeCommande`,`date`,`prixP`,`codeClient`) VALUES ('CC0001','21-04-2020', 99,'C0660'); -- Naruto commande deux soupe au ramen ainsi qu'une salade feta / + cook pour le livreur ??
-INSERT INTO `cooking`.`panier` (`codeCommande`,`date`,`prixP`,`codeClient`) VALUES ('CC0002','22-04-2020', 14,'C0656');
+INSERT INTO `cooking`.`panier` (`codeCommande`,`date`,`prixP`,`codeClient`) VALUES ('CC0001','21-04-20', 99,'C0660'); -- Naruto commande deux soupe au ramen ainsi qu'une salade feta / + cook pour le livreur ??
+INSERT INTO `cooking`.`panier` (`codeCommande`,`date`,`prixP`,`codeClient`) VALUES ('CC0002','22-04-20', 14,'C0656');
 
 
 -- (3) Insertion dans la table constitutionPanier 
