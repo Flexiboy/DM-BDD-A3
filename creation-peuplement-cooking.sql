@@ -21,7 +21,6 @@ CREATE TABLE `cooking`.`fournisseur` (
 	`codeFournisseur` VARCHAR(8) NOT NULL,
     `nomF` VARCHAR(12) NOT NULL,
     `telephoneF` VARCHAR(10) NOT NULL,
-    `mdpF` VARCHAR(20) NOT NULL,
     PRIMARY KEY (`codeFournisseur`) );
     
 CREATE TABLE `cooking`.`produit` (
@@ -115,7 +114,7 @@ CREATE TABLE `cooking`.`constitutionPanier` (
 
 -- PEUPLEMENT TABLE
 
--- (12) Insertion dans la table client
+-- (13) Insertion dans la table client
 INSERT INTO `cooking`.`client` (`codeClient`,`nomC`,`prenomC`,`telephoneC`,`usernameC`,`mdpC`,`createur`,`cook`, `nombreCommandeCdR`) VALUES ('C0000','Cooking','Cooking','0000000000','Cooking','cooking', True, 0, 1);
 INSERT INTO `cooking`.`client` (`codeClient`,`nomC`,`prenomC`,`telephoneC`,`usernameC`,`mdpC`,`createur`,`cook`, `nombreCommandeCdR`) VALUES ('C0655','White','Walter','0685698521','IamTheDanger','BB_WW', False, 0, 0);
 INSERT INTO `cooking`.`client` (`codeClient`,`nomC`,`prenomC`,`telephoneC`,`usernameC`,`mdpC`,`createur`,`cook`, `nombreCommandeCdR`) VALUES ('C0656','Pinkman','Jesse','0645278962','bxxch','BB_PJ', False, 0, 0);
@@ -132,10 +131,10 @@ INSERT INTO `cooking`.`client` (`codeClient`,`nomC`,`prenomC`,`telephoneC`,`user
 
 
 -- (4) Insertion dans la table fournisseur  
-INSERT INTO `cooking`.`fournisseur` (`codeFournisseur`,`nomF`,`telephoneF`,`mdpF`) VALUES ('F014','Johnson','0137869524','CJgrooveStr');
-INSERT INTO `cooking`.`fournisseur` (`codeFournisseur`,`nomF`,`telephoneF`,`mdpF`) VALUES ('F015','Ichiraku','0148652391','KonohaRamen');
-INSERT INTO `cooking`.`fournisseur` (`codeFournisseur`,`nomF`,`telephoneF`,`mdpF`) VALUES ('F016','StarkFood','0117489635','theA');
-INSERT INTO `cooking`.`fournisseur` (`codeFournisseur`,`nomF`,`telephoneF`,`mdpF`) VALUES ('F017','F&F','0136596842','1_Fam_9');
+INSERT INTO `cooking`.`fournisseur` (`codeFournisseur`,`nomF`,`telephoneF`) VALUES ('F014','Johnson','0137869524');
+INSERT INTO `cooking`.`fournisseur` (`codeFournisseur`,`nomF`,`telephoneF`) VALUES ('F015','Ichiraku','0148652391');
+INSERT INTO `cooking`.`fournisseur` (`codeFournisseur`,`nomF`,`telephoneF`) VALUES ('F016','StarkFood','0117489635');
+INSERT INTO `cooking`.`fournisseur` (`codeFournisseur`,`nomF`,`telephoneF`) VALUES ('F017','F&F','0136596842');
 
 
 -- (29) Insertion dans la table produit  
