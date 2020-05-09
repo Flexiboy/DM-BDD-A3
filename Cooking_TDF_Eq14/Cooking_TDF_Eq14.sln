@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30011.22
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cooking_TDF_Eq14", "Cooking_TDF_Eq14\Cooking_TDF_Eq14.csproj", "{C6A6DA7E-7A3F-48C5-9741-74F87622C71C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnitTestProjectBDD", "UnitTestProjectBDD\UnitTestProjectBDD.csproj", "{A055C231-358E-41A6-91A1-FD52E94BDD54}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C6A6DA7E-7A3F-48C5-9741-74F87622C71C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C6A6DA7E-7A3F-48C5-9741-74F87622C71C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C6A6DA7E-7A3F-48C5-9741-74F87622C71C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C6A6DA7E-7A3F-48C5-9741-74F87622C71C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A055C231-358E-41A6-91A1-FD52E94BDD54}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A055C231-358E-41A6-91A1-FD52E94BDD54}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A055C231-358E-41A6-91A1-FD52E94BDD54}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A055C231-358E-41A6-91A1-FD52E94BDD54}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {F0F732DA-6CA0-48BC-BDC8-563473D28F08}
+	EndGlobalSection
+EndGlobal
