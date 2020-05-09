@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<stock_shortage>
+  <product>
+    <code>P0034</code>
+    <name>Persil</name>
+    <stock>30</stock>
+    <minimum_stock>50</minimum_stock>
+  </product>
+  <product>
+    <code>P0038</code>
+    <name>Poivron rouge</name>
+    <stock>14</stock>
+    <minimum_stock>20</minimum_stock>
+  </product>
+  <product>
+    <code>P0040</code>
+    <name>Farine</name>
+    <stock>500</stock>
+    <minimum_stock>30000</minimum_stock>
+  </product>
+  <product>
+    <code>P0042</code>
+    <name>Lait</name>
+    <stock>9000</stock>
+    <minimum_stock>20000</minimum_stock>
+  </product>
+</stock_shortage>

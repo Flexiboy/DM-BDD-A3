@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using MySql.Data.MySqlClient;
+using System.Xml;
 
 
 namespace Cooking_TDF_Eq14
@@ -52,6 +53,7 @@ namespace Cooking_TDF_Eq14
         }
 
         #region Demo Mode
+        
         static void DemoMode(MySqlConnection connection) // Main method of the Demo Mode, act as a dashboard where we can call various method in order to complete tasks
         {
             Console.Clear();
@@ -317,9 +319,11 @@ namespace Cooking_TDF_Eq14
 
             LittleMenuDemo(connection); // little menu
         }
+        
         #endregion
 
         #region Client
+        
         static void Signing(MySqlConnection connection) // Create a customer
         {
             Console.Clear();
@@ -931,7 +935,7 @@ namespace Cooking_TDF_Eq14
                 connection.Close(); // --> CLOSE CO
             }
         }
-        static void UpdateStock(MySqlConnection connection, SortedList<string, int> listBasket)
+        static void UpdateStock(MySqlConnection connection, SortedList<string, int> listBasket) // Stock of product decrease after an order
         {
             for (int i = 0; i < listBasket.Count(); i++)
             {
@@ -1333,9 +1337,11 @@ namespace Cooking_TDF_Eq14
 
             Client(connection, codeClient);
         }
+        
         #endregion
 
         #region Cooking
+
         static void Dashboard(MySqlConnection connection) // Main method for the cooking, act as a dashboard where we can call various method in order to complete requests
         {
             Console.Clear();
@@ -2003,21 +2009,26 @@ namespace Cooking_TDF_Eq14
             reader.Read();
             connection.Close(); // --> CLOSE CO
         }
+        
+        #endregion
+
+        #region Update
 
         static int DateDistance(string date)
         {
-            int year = Convert.ToInt32(date[6]) * 10 + Convert.ToInt32(date[7]) + 2000;
-            int month = Convert.ToInt32(date[3]) * 10 + Convert.ToInt32(date[4]);
-            int day = Convert.ToInt32(date[0]) * 10 + Convert.ToInt32(date[1]);
+            int year = Convert.ToInt32(date.Substring(6,1)) * 10 + Convert.ToInt32(date.Substring(7,1)) + 2000;
+            int month = Convert.ToInt32(date.Substring(3,1)) * 10 + Convert.ToInt32(date.Substring(4,1));
+            int day = Convert.ToInt32(date.Substring(0,1)) * 10 + Convert.ToInt32(date.Substring(1,1));
+
             DateTime enteredDate = new DateTime(year, month, day);
 
             TimeSpan delay = DateTime.Today - enteredDate;
 
             return Convert.ToInt32(delay.TotalDays);
         }
-
-        static void Reapprovisionnement(MySqlConnection connection)
+        static void Restocking(MySqlConnection connection) // Update stock min/max of the product that haven't been used for the last 30 days
         {
+            connection.Open();
             MySqlCommand retrieve = connection.CreateCommand();
             retrieve.CommandText = "SELECT codeProduit, derniereUtilisation, stockMax, stockMin FROM produit;";
             MySqlDataReader reader = retrieve.ExecuteReader();
@@ -2035,9 +2046,43 @@ namespace Cooking_TDF_Eq14
                     reader2.Read();
                 }
             }
+            connection.Close();
         }
 
-        static void UpdateProduct(MySqlConnection connection, string mealCode)
+        static bool Check()
+        {
+            DayOfWeek day = DateTime.Today.DayOfWeek;
+            int hour = DateTime.Now.Hour;
+            int minute = DateTime.Now.Minute;
+            int seconds = DateTime.Now.Second;
+
+            bool test = false;
+
+            if (day == DayOfWeek.Sunday)
+            {
+                if (hour == 23 && minute == 59 && seconds == 59)
+                {
+                    test = true;
+                }
+            }
+            return test;
+        }
+        static void UpdateWeeklyOrders(MySqlConnection connection) // Set the weekly order to 0 on sunday 11:59
+        {
+            MySqlDataReader reader;
+            connection.Open();
+
+            if (Check())
+            {
+                MySqlCommand update = connection.CreateCommand();
+                update.CommandText = "UPDATE recette SET nombreCommandeSemaine = 0;";
+                reader = update.ExecuteReader();
+                reader.Read();
+            }
+            connection.Close();
+        }
+
+        static void UpdateProduct(MySqlConnection connection, string mealCode) // Update the last use date of a product
         {
             MySqlDataReader reader;
             connection.Open();
@@ -2062,42 +2107,7 @@ namespace Cooking_TDF_Eq14
 
             connection.Close();
         }
-
-        static bool Check()
-        {
-            DayOfWeek day = DateTime.Today.DayOfWeek;
-            int hour = DateTime.Now.Hour;
-            int minute = DateTime.Now.Minute;
-            int seconds = DateTime.Now.Second;
-
-            bool test = false;
-
-            if (day == DayOfWeek.Sunday)
-            {
-                if (hour == 23 && minute == 59 && seconds == 59)
-                {
-                    test = true;
-                }
-            }
-            return test;
-        }
-
-        static void UpdateWeeklyOrders(MySqlConnection connection)
-        {
-            MySqlDataReader reader;
-            connection.Open();
-
-            if (Check())
-            {
-                MySqlCommand update = connection.CreateCommand();
-                update.CommandText = "UPDATE recette SET nombreCommandeSemaine = 0;";
-                reader = update.ExecuteReader();
-                reader.Read();
-            }
-            connection.Close();
-        }
-
-        static void Update(MySqlConnection connection, string orderNumber)
+        static void Update(MySqlConnection connection, string orderNumber) // Update the weekly order of a meal and the total order of a CdR
         {
             MySqlDataReader reader;
             connection.Open();
@@ -2133,21 +2143,83 @@ namespace Cooking_TDF_Eq14
             }
             connection.Close();
         }
-            #endregion
 
-            #region XML
+        #endregion
+
+        #region XML
+
+        public static void XmlStock(MySqlConnection connection)
+        {
+            XmlDocument docXml = new XmlDocument();
+            XmlElement racine = docXml.CreateElement("stock_shortage");
+            docXml.AppendChild(racine);
+
+            XmlDeclaration xmlDecl = docXml.CreateXmlDeclaration("1.0", "UTF-8", "no");
+            docXml.InsertBefore(xmlDecl, racine);
+
+            // Getting the product
+
+            string codeProduct = "";
+            string nameProduct = "";
+            string stockP = "";
+            string stockMin = "";
+
+            connection.Open(); // --> OPEN CO
+            MySqlCommand command = connection.CreateCommand();
+            command.CommandText =
+             "SELECT codeProduit, nomP, stock, stockMin FROM produit WHERE stock < stockMin;";
+            MySqlDataReader reader;
+            reader = command.ExecuteReader();
+
+            while (reader.Read())
+            {
+                codeProduct = reader.GetString(0);
+                nameProduct = reader.GetString(1);
+                stockP = Convert.ToString(reader.GetInt32(2));
+                stockMin = Convert.ToString(reader.GetInt32(3));
+
+                XmlElement product = docXml.CreateElement("product");
+                racine.AppendChild(product);
+
+                XmlElement code = docXml.CreateElement("code");
+                code.InnerText = codeProduct;
+                product.AppendChild(code);
+
+                XmlElement name = docXml.CreateElement("name");
+                name.InnerText = nameProduct;
+                product.AppendChild(name);
+
+                XmlElement stock = docXml.CreateElement("stock");
+                stock.InnerText = stockP;
+                product.AppendChild(stock);
+
+                XmlElement stockM = docXml.CreateElement("minimum_stock");
+                stockM.InnerText = stockMin;
+                product.AppendChild(stockM);
+            }
+
+            docXml.Save("stock_shortage.xml");
+
+            reader.Close();
+            connection.Close(); // --> CLOSE CO
+        }
+
+        #endregion
 
 
+        // _______________________________ MAIN
 
-            #endregion
-
-
-            // _______________________________ MAIN
-
-            static void Main(string[] args)
+        static void Main(string[] args)
         {
             string connectionString = "SERVER=localhost;PORT=3306;DATABASE=cooking;UID=cookingmama;PASSWORD=coco;";
             MySqlConnection connection = new MySqlConnection(connectionString);
+
+
+            // Restocking(connection); // change stock min/max of the product that haven't been used for the last 30 days
+            // UpdateWeeklyOrders(connection); // set all the weekly order to 0 on sunday 11:59
+
+            XmlStock(connection); // Create an xml file with all the product that has a stock < minimal stock
+
 
 
             MainMenu(connection);

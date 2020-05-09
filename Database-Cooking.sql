@@ -161,15 +161,15 @@ INSERT INTO `cooking`.`produit` (`codeProduit`,`nomP`,`categorie`,`stock`,`stock
 INSERT INTO `cooking`.`produit` (`codeProduit`,`nomP`,`categorie`,`stock`,`stockMax`,`stockMin`,`unite`, `derniereUtilisation`) VALUES ('P0031','Céleri','légume', 200, 1000, 50,'pièce', '01-01-01');
 INSERT INTO `cooking`.`produit` (`codeProduit`,`nomP`,`categorie`,`stock`,`stockMax`,`stockMin`,`unite`, `derniereUtilisation`) VALUES ('P0032','Tomate','légume', 400000, 500000, 100000,'g', '21-04-20');
 INSERT INTO `cooking`.`produit` (`codeProduit`,`nomP`,`categorie`,`stock`,`stockMax`,`stockMin`,`unite`, `derniereUtilisation`) VALUES ('P0033','Boeuf haché','viande', 300000, 500000, 100000,'g', '01-01-01');
-INSERT INTO `cooking`.`produit` (`codeProduit`,`nomP`,`categorie`,`stock`,`stockMax`,`stockMin`,`unite`, `derniereUtilisation`) VALUES ('P0034','Persil','plante', 130, 110, 50,'pièce', '01-01-01'); -- stock < stock min
+INSERT INTO `cooking`.`produit` (`codeProduit`,`nomP`,`categorie`,`stock`,`stockMax`,`stockMin`,`unite`, `derniereUtilisation`) VALUES ('P0034','Persil','plante', 30, 110, 50,'pièce', '01-01-01'); -- stock < stock min
 INSERT INTO `cooking`.`produit` (`codeProduit`,`nomP`,`categorie`,`stock`,`stockMax`,`stockMin`,`unite`, `derniereUtilisation`) VALUES ('P0035','Huile','corps gras', 30000, 60000, 15000,'g', '22-04-20');
 INSERT INTO `cooking`.`produit` (`codeProduit`,`nomP`,`categorie`,`stock`,`stockMax`,`stockMin`,`unite`, `derniereUtilisation`) VALUES ('P0036','Fromage feta','produit laitier', 2500, 10000, 1000,'g', '21-04-20');
 INSERT INTO `cooking`.`produit` (`codeProduit`,`nomP`,`categorie`,`stock`,`stockMax`,`stockMin`,`unite`, `derniereUtilisation`) VALUES ('P0037','Concombre','fruit', 330, 500, 200,'pièce', '21-04-20'); -- // botaniquement un fruit mais consommé comme un légume...
-INSERT INTO `cooking`.`produit` (`codeProduit`,`nomP`,`categorie`,`stock`,`stockMax`,`stockMin`,`unite`, `derniereUtilisation`) VALUES ('P0038','Poivron rouge','légume', 40, 10, 20,'pièce', '21-04-20'); -- stock < stock min
+INSERT INTO `cooking`.`produit` (`codeProduit`,`nomP`,`categorie`,`stock`,`stockMax`,`stockMin`,`unite`, `derniereUtilisation`) VALUES ('P0038','Poivron rouge','légume', 14, 100, 20,'pièce', '21-04-20');
 INSERT INTO `cooking`.`produit` (`codeProduit`,`nomP`,`categorie`,`stock`,`stockMax`,`stockMin`,`unite`, `derniereUtilisation`) VALUES ('P0039','Olive noir','fruit', 6000, 20000, 3000,'g', '21-04-20');
-INSERT INTO `cooking`.`produit` (`codeProduit`,`nomP`,`categorie`,`stock`,`stockMax`,`stockMin`,`unite`, `derniereUtilisation`) VALUES ('P0040','Farine','féculent', 600000, 100, 300000,'g', '22-04-20'); -- stock < stock min
+INSERT INTO `cooking`.`produit` (`codeProduit`,`nomP`,`categorie`,`stock`,`stockMax`,`stockMin`,`unite`, `derniereUtilisation`) VALUES ('P0040','Farine','féculent', 500, 600000, 30000,'g', '22-04-20'); -- stock < stock min
 INSERT INTO `cooking`.`produit` (`codeProduit`,`nomP`,`categorie`,`stock`,`stockMax`,`stockMin`,`unite`, `derniereUtilisation`) VALUES ('P0041','Levure','autre', 9000, 30000, 5000,'g', '22-04-20');
-INSERT INTO `cooking`.`produit` (`codeProduit`,`nomP`,`categorie`,`stock`,`stockMax`,`stockMin`,`unite`, `derniereUtilisation`) VALUES ('P0042','Lait','produit laitier', 40000, 35000, 20000,'ml', '22-04-20'); -- stock < stock min
+INSERT INTO `cooking`.`produit` (`codeProduit`,`nomP`,`categorie`,`stock`,`stockMax`,`stockMin`,`unite`, `derniereUtilisation`) VALUES ('P0042','Lait','produit laitier', 9000, 35000, 20000,'ml', '22-04-20'); -- stock < stock min
 
 
 -- (4) Insertion dans la table recette  
@@ -230,7 +230,7 @@ INSERT INTO `cooking`.`constitutionRecette` (`codeRecette`,`codeProduit`,`quanti
     
 
 -- (2) Insertion dans la table panier 
-INSERT INTO `cooking`.`panier` (`codeCommande`,`date`,`prixP`,`codeClient`) VALUES ('CC0001','1-4-20', 99,'C0660'); -- Naruto commande deux soupe au ramen ainsi qu'une salade feta / + cook pour le livreur ??
+INSERT INTO `cooking`.`panier` (`codeCommande`,`date`,`prixP`,`codeClient`) VALUES ('CC0001','01-04-20', 99,'C0660'); -- Naruto commande deux soupe au ramen ainsi qu'une salade feta / + cook pour le livreur ??
 INSERT INTO `cooking`.`panier` (`codeCommande`,`date`,`prixP`,`codeClient`) VALUES ('CC0002','22-04-20', 14,'C0656');
 
 
