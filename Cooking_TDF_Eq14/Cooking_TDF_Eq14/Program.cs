@@ -2026,6 +2026,7 @@ namespace Cooking_TDF_Eq14
 
             return Convert.ToInt32(delay.TotalDays);
         }
+
         static void Restocking(MySqlConnection connection) // Update stock min/max of the product that haven't been used for the last 30 days
         {
             connection.Open();
@@ -2045,39 +2046,6 @@ namespace Cooking_TDF_Eq14
                     MySqlDataReader reader2 = update.ExecuteReader();
                     reader2.Read();
                 }
-            }
-            connection.Close();
-        }
-
-        static bool Check()
-        {
-            DayOfWeek day = DateTime.Today.DayOfWeek;
-            int hour = DateTime.Now.Hour;
-            int minute = DateTime.Now.Minute;
-            int seconds = DateTime.Now.Second;
-
-            bool test = false;
-
-            if (day == DayOfWeek.Sunday)
-            {
-                if (hour == 23 && minute == 59 && seconds == 59)
-                {
-                    test = true;
-                }
-            }
-            return test;
-        }
-        static void UpdateWeeklyOrders(MySqlConnection connection) // Set the weekly order to 0 on sunday 11:59
-        {
-            MySqlDataReader reader;
-            connection.Open();
-
-            if (Check())
-            {
-                MySqlCommand update = connection.CreateCommand();
-                update.CommandText = "UPDATE recette SET nombreCommandeSemaine = 0;";
-                reader = update.ExecuteReader();
-                reader.Read();
             }
             connection.Close();
         }
@@ -2226,6 +2194,51 @@ namespace Cooking_TDF_Eq14
 
 
             Console.ReadKey();
+        }
+    }
+
+    public class Update
+    {
+        static bool Check()
+        {
+            DayOfWeek day = DateTime.Today.DayOfWeek;
+            int hour = DateTime.Now.Hour;
+            int minute = DateTime.Now.Minute;
+            int seconds = DateTime.Now.Second;
+
+            bool test = false;
+
+            if (day == DayOfWeek.Sunday)
+            {
+                if (hour == 23 && minute == 59 && seconds == 59)
+                {
+                    test = true;
+                }
+            }
+            return test;
+        }
+
+        static void UpdateWeeklyOrders(MySqlConnection connection) // Set the weekly order to 0 on sunday 11:59
+        {
+            MySqlDataReader reader;
+            connection.Open();
+
+            if (Check())
+            {
+                MySqlCommand update = connection.CreateCommand();
+                update.CommandText = "UPDATE recette SET nombreCommandeSemaine = 0;";
+                reader = update.ExecuteReader();
+                reader.Read();
+            }
+            connection.Close();
+        }
+
+        static void UpdateMain(MySqlConnection connection)
+        {
+            while(true)
+            {
+                UpdateWeeklyOrders(connection);
+            }
         }
     }
 }
