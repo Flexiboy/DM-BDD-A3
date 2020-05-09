@@ -2003,18 +2003,148 @@ namespace Cooking_TDF_Eq14
             reader.Read();
             connection.Close(); // --> CLOSE CO
         }
-        #endregion
 
-        #region XML
+        static int DateDistance(string date)
+        {
+            int year = Convert.ToInt32(date[6]) * 10 + Convert.ToInt32(date[7]) + 2000;
+            int month = Convert.ToInt32(date[3]) * 10 + Convert.ToInt32(date[4]);
+            int day = Convert.ToInt32(date[0]) * 10 + Convert.ToInt32(date[1]);
+            DateTime enteredDate = new DateTime(year, month, day);
+
+            TimeSpan delay = DateTime.Today - enteredDate;
+
+            return Convert.ToInt32(delay.TotalDays);
+        }
+
+        static void Reapprovisionnement(MySqlConnection connection)
+        {
+            MySqlCommand retrieve = connection.CreateCommand();
+            retrieve.CommandText = "SELECT codeProduit, derniereUtilisation, stockMax, stockMin FROM produit;";
+            MySqlDataReader reader = retrieve.ExecuteReader();
+            reader.Read();
+
+            while (reader.Read())
+            {
+                if (DateDistance(reader.GetString(1)) > 30)
+                {
+                    MySqlCommand update = connection.CreateCommand();
+                    int stockMax = reader.GetInt32(2) % 2;
+                    int stockMin = reader.GetInt32(3) % 2;
+                    update.CommandText = "UPDATE produit SET stockMax = \"" + Convert.ToString(stockMax) + "\", stockMin = \"" + Convert.ToString(stockMin) + "\" WHERE codeProduit = \"" + reader.GetString(0) + "\";";
+                    MySqlDataReader reader2 = update.ExecuteReader();
+                    reader2.Read();
+                }
+            }
+        }
+
+        static void UpdateProduct(MySqlConnection connection, string mealCode)
+        {
+            MySqlDataReader reader;
+            connection.Open();
+            MySqlCommand infos = connection.CreateCommand();
+            infos.CommandText = "SELECT codeProduit FROM constitutionRecette WHERE codeRecette = \"" + mealCode + "\";";
+            reader = infos.ExecuteReader();
+            reader.Read();
+
+            DateTime today = DateTime.Today;
+            string day = Convert.ToString(today.Day);
+            string month = Convert.ToString(today.Month);
+            string year = Convert.ToString(today.Year - 2000);
+            string date = day + "-" + month + "-" + year;
+
+            while (reader.Read())
+            {
+                MySqlCommand update = connection.CreateCommand();
+                update.CommandText = "UPDATE produit SET derniereUtilisation = \"" + date + "\" WHERE codeProduit = \"" + reader.GetString(0) + "\";";
+                MySqlDataReader reader2 = update.ExecuteReader();
+                reader2.Read();
+            }
+
+            connection.Close();
+        }
+
+        static bool Check()
+        {
+            DayOfWeek day = DateTime.Today.DayOfWeek;
+            int hour = DateTime.Now.Hour;
+            int minute = DateTime.Now.Minute;
+            int seconds = DateTime.Now.Second;
+
+            bool test = false;
+
+            if (day == DayOfWeek.Sunday)
+            {
+                if (hour == 23 && minute == 59 && seconds == 59)
+                {
+                    test = true;
+                }
+            }
+            return test;
+        }
+
+        static void UpdateWeeklyOrders(MySqlConnection connection)
+        {
+            MySqlDataReader reader;
+            connection.Open();
+
+            if (Check())
+            {
+                MySqlCommand update = connection.CreateCommand();
+                update.CommandText = "UPDATE recette SET nombreCommandeSemaine = 0;";
+                reader = update.ExecuteReader();
+                reader.Read();
+            }
+            connection.Close();
+        }
+
+        static void Update(MySqlConnection connection, string orderNumber)
+        {
+            MySqlDataReader reader;
+            connection.Open();
+
+            MySqlCommand infos = connection.CreateCommand();
+            infos.CommandText = "SELECT codeRecette, quantiteRecette FROM constitutionPanier WHERE codeCommande = \"" + orderNumber + "\";";
+            reader = infos.ExecuteReader();
+            reader.Read();
+
+            while (reader.Read())
+            {
+                MySqlCommand infos2 = connection.CreateCommand();
+                infos2.CommandText = "SELECT codeClient, nombreCommandeSemaine, nombreCommande FROM recette WHERE codeRecette = \"" + reader.GetString(0) + "\";";
+                MySqlDataReader reader2 = infos2.ExecuteReader();
+                reader2.Read();
+
+                int weeklyOrders = reader2.GetInt32(1) + reader.GetInt32(1);
+                int orders = reader2.GetInt32(2) + reader.GetInt32(1);
+                string customerNumber = reader2.GetString(0);
+
+                reader2.Close();
+
+                MySqlCommand update1 = connection.CreateCommand();
+                update1.CommandText = "UPDATE recette SET nombreCommandeSemaine = \"" + Convert.ToString(weeklyOrders) + "\", nombreCommande = \"" + Convert.ToString(orders) + "\" WHERE codeRecette = \"" + reader.GetString(0) + "\";";
+                reader2 = update1.ExecuteReader();
+                reader2.Read();
+                reader2.Close();
+                MySqlCommand update2 = connection.CreateCommand();
+                update2.CommandText = "UPDATE client SET nombreCommandeCdR = \"" + Convert.ToString(orders) + "\" WHERE codeClient = \"" + customerNumber + "\";";
+                reader2 = update2.ExecuteReader();
+                reader2.Read();
+                UpdateProduct(connection, reader.GetString(0));
+            }
+            connection.Close();
+        }
+            #endregion
+
+            #region XML
 
 
 
-        #endregion
+            #endregion
 
 
-        // _______________________________ MAIN
+            // _______________________________ MAIN
 
-        static void Main(string[] args)
+            static void Main(string[] args)
         {
             string connectionString = "SERVER=localhost;PORT=3306;DATABASE=cooking;UID=cookingmama;PASSWORD=coco;";
             MySqlConnection connection = new MySqlConnection(connectionString);
