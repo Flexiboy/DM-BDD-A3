@@ -2053,7 +2053,6 @@ namespace Cooking_TDF_Eq14
         static void UpdateProduct(MySqlConnection connection, string mealCode) // Update the last use date of a product
         {
             MySqlDataReader reader;
-            connection.Open();
             MySqlCommand infos = connection.CreateCommand();
             infos.CommandText = "SELECT codeProduit FROM constitutionRecette WHERE codeRecette = \"" + mealCode + "\";";
             reader = infos.ExecuteReader();
@@ -2064,13 +2063,22 @@ namespace Cooking_TDF_Eq14
             string month = Convert.ToString(today.Month);
             string year = Convert.ToString(today.Year - 2000);
             string date = day + "-" + month + "-" + year;
+            List<string> productCode = new List<string>(); 
 
             while (reader.Read())
             {
+                productCode.Add(reader.GetString(0));
+            }
+
+            reader.Close();
+
+            foreach (string product in productCode)
+            {
                 MySqlCommand update = connection.CreateCommand();
-                update.CommandText = "UPDATE produit SET derniereUtilisation = \"" + date + "\" WHERE codeProduit = \"" + reader.GetString(0) + "\";";
-                MySqlDataReader reader2 = update.ExecuteReader();
-                reader2.Read();
+                update.CommandText = "UPDATE produit SET derniereUtilisation = \"" + date + "\" WHERE codeProduit = \"" + product + "\";";
+                reader = update.ExecuteReader();
+                reader.Read();
+                reader.Close();
             }
 
             connection.Close();
@@ -2084,32 +2092,51 @@ namespace Cooking_TDF_Eq14
             infos.CommandText = "SELECT codeRecette, quantiteRecette FROM constitutionPanier WHERE codeCommande = \"" + orderNumber + "\";";
             reader = infos.ExecuteReader();
             reader.Read();
+            List<string[]> toUpdate = new List<string[]>();
+            List<string[]> toUpdate2 = new List<string[]>();
+            string[] temp = new string[2];
+            string[] temp2 = new string[4];
 
             while (reader.Read())
             {
-                MySqlCommand infos2 = connection.CreateCommand();
-                infos2.CommandText = "SELECT codeClient, nombreCommandeSemaine, nombreCommande FROM recette WHERE codeRecette = \"" + reader.GetString(0) + "\";";
-                MySqlDataReader reader2 = infos2.ExecuteReader();
-                reader2.Read();
-
-                int weeklyOrders = reader2.GetInt32(1) + reader.GetInt32(1);
-                int orders = reader2.GetInt32(2) + reader.GetInt32(1);
-                string customerNumber = reader2.GetString(0);
-
-                reader2.Close();
-
-                MySqlCommand update1 = connection.CreateCommand();
-                update1.CommandText = "UPDATE recette SET nombreCommandeSemaine = \"" + Convert.ToString(weeklyOrders) + "\", nombreCommande = \"" + Convert.ToString(orders) + "\" WHERE codeRecette = \"" + reader.GetString(0) + "\";";
-                reader2 = update1.ExecuteReader();
-                reader2.Read();
-                reader2.Close();
-                MySqlCommand update2 = connection.CreateCommand();
-                update2.CommandText = "UPDATE client SET nombreCommandeCdR = \"" + Convert.ToString(orders) + "\" WHERE codeClient = \"" + customerNumber + "\";";
-                reader2 = update2.ExecuteReader();
-                reader2.Read();
-                UpdateProduct(connection, reader.GetString(0));
+                temp[0] = reader.GetString(0);
+                temp[1] = reader.GetString(1);
+                toUpdate.Add(temp);
             }
-            connection.Close();
+
+            reader.Close();
+            MySqlCommand infos2 = connection.CreateCommand();
+
+            foreach (string[] line in toUpdate)
+            {
+                infos2.CommandText = "SELECT codeClient, nombreCommandeSemaine, nombreCommande FROM recette WHERE codeRecette = \"" + line[0] + "\";";
+                reader = infos2.ExecuteReader();
+                reader.Read();
+                int weeklyOrders = reader.GetInt32(1) + Convert.ToInt32(line[1]);
+                int orders = reader.GetInt32(2) + Convert.ToInt32(line[1]);
+                string customerNumber = reader.GetString(0);
+                temp2[0] = Convert.ToString(weeklyOrders);
+                temp2[1] = Convert.ToString(orders);
+                temp2[2] = customerNumber;
+                temp2[3] = line[0];
+                toUpdate2.Add(temp2);
+                reader.Close();
+            }
+
+            foreach (string[] line in toUpdate2)
+            {
+                MySqlCommand update1 = connection.CreateCommand();
+                update1.CommandText = "UPDATE recette SET nombreCommandeSemaine = \"" + line[0] + "\", nombreCommande = \"" + line[1] + "\" WHERE codeRecette = \"" + line[3] + "\";";
+                reader = update1.ExecuteReader();
+                reader.Read();
+                reader.Close();
+                MySqlCommand update2 = connection.CreateCommand();
+                update2.CommandText = "UPDATE client SET nombreCommandeCdR = \"" + line[1] + "\" WHERE codeClient = \"" + line[2] + "\";";
+                reader = update2.ExecuteReader();
+                reader.Read();
+                reader.Close();
+                UpdateProduct(connection, line[3]);
+            }
         }
 
         #endregion
@@ -2186,13 +2213,13 @@ namespace Cooking_TDF_Eq14
             // Restocking(connection); // change stock min/max of the product that haven't been used for the last 30 days
             // UpdateWeeklyOrders(connection); // set all the weekly order to 0 on sunday 11:59
 
-            XmlStock(connection); // Create an xml file with all the product that has a stock < minimal stock
+            //XmlStock(connection); // Create an xml file with all the product that has a stock < minimal stock
 
 
 
-            MainMenu(connection);
+            //MainMenu(connection);
 
-
+            Update(connection, "CC0001");
             Console.ReadKey();
         }
     }
