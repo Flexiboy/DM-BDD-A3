@@ -2034,19 +2034,35 @@ namespace Cooking_TDF_Eq14
             retrieve.CommandText = "SELECT codeProduit, derniereUtilisation, stockMax, stockMin FROM produit;";
             MySqlDataReader reader = retrieve.ExecuteReader();
             reader.Read();
+            List<string[]> infos = new List<string[]>();
+            string[] temp = new string[4];
 
             while (reader.Read())
             {
                 if (DateDistance(reader.GetString(1)) > 30)
                 {
-                    MySqlCommand update = connection.CreateCommand();
                     int stockMax = reader.GetInt32(2) % 2;
                     int stockMin = reader.GetInt32(3) % 2;
-                    update.CommandText = "UPDATE produit SET stockMax = \"" + Convert.ToString(stockMax) + "\", stockMin = \"" + Convert.ToString(stockMin) + "\" WHERE codeProduit = \"" + reader.GetString(0) + "\";";
-                    MySqlDataReader reader2 = update.ExecuteReader();
-                    reader2.Read();
+                    temp[0] = reader.GetString(0);
+                    temp[1] = reader.GetString(1);
+                    temp[2] = Convert.ToString(stockMax);
+                    temp[3] = Convert.ToString(stockMin);
+                    infos.Add(temp);
                 }
             }
+
+            reader.Close();
+
+            MySqlCommand update = connection.CreateCommand();
+
+            foreach (string[] line in infos)
+            {
+                update.CommandText = "UPDATE produit SET stockMax = \"" + line[2] + "\", stockMin = \"" + line[3] + "\" WHERE codeProduit = \"" + line[0] + "\";";
+                reader = update.ExecuteReader();
+                reader.Read();
+                reader.Close();
+            }
+            
             connection.Close();
         }
 
@@ -2072,9 +2088,10 @@ namespace Cooking_TDF_Eq14
 
             reader.Close();
 
+            MySqlCommand update = connection.CreateCommand();
+
             foreach (string product in productCode)
             {
-                MySqlCommand update = connection.CreateCommand();
                 update.CommandText = "UPDATE produit SET derniereUtilisation = \"" + date + "\" WHERE codeProduit = \"" + product + "\";";
                 reader = update.ExecuteReader();
                 reader.Read();
@@ -2123,14 +2140,15 @@ namespace Cooking_TDF_Eq14
                 reader.Close();
             }
 
+            MySqlCommand update1 = connection.CreateCommand();
+            MySqlCommand update2 = connection.CreateCommand();
+
             foreach (string[] line in toUpdate2)
             {
-                MySqlCommand update1 = connection.CreateCommand();
                 update1.CommandText = "UPDATE recette SET nombreCommandeSemaine = \"" + line[0] + "\", nombreCommande = \"" + line[1] + "\" WHERE codeRecette = \"" + line[3] + "\";";
                 reader = update1.ExecuteReader();
                 reader.Read();
                 reader.Close();
-                MySqlCommand update2 = connection.CreateCommand();
                 update2.CommandText = "UPDATE client SET nombreCommandeCdR = \"" + line[1] + "\" WHERE codeClient = \"" + line[2] + "\";";
                 reader = update2.ExecuteReader();
                 reader.Read();
@@ -2256,6 +2274,7 @@ namespace Cooking_TDF_Eq14
                 update.CommandText = "UPDATE recette SET nombreCommandeSemaine = 0;";
                 reader = update.ExecuteReader();
                 reader.Read();
+                reader.Close();
             }
             connection.Close();
         }
