@@ -2228,16 +2228,15 @@ namespace Cooking_TDF_Eq14
             MySqlConnection connection = new MySqlConnection(connectionString);
 
 
-            // Restocking(connection); // change stock min/max of the product that haven't been used for the last 30 days
-            // UpdateWeeklyOrders(connection); // set all the weekly order to 0 on sunday 11:59
+            Restocking(connection); // change stock min/max of the product that haven't been used for the last 30 days
+            UpdateWeeklyOrders(connection); // set all the weekly order to 0 on sunday 11:59
 
-            //XmlStock(connection); // Create an xml file with all the product that has a stock < minimal stock
+            XmlStock(connection); // Create an xml file with all the product that has a stock < minimal stock
 
 
 
-            //MainMenu(connection);
+            MainMenu(connection);
 
-            Update(connection, "CC0001");
             Console.ReadKey();
         }
     }
