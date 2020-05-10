@@ -798,8 +798,10 @@ namespace Cooking_TDF_Eq14
             CreateBasket(connection, codeCommand, totalprice, codeClient);
             CreateBasketComposition(connection, codeCommand, listBasket);
             PayCdR(connection, listRemuneration);
-            UpdateMeal(connection, listBasket); // update total order, price and remuneration if needed
-            UpdateStock(connection, listBasket); //Update stock
+
+            UpdateMeal(connection, listBasket); // Update total order, price and remuneration if needed
+            UpdateStock(connection, listBasket); // Update stock
+            Update(connection, listBasket); // Update total number of order of a cdr
 
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine("\n------ Your meal will now arrive anytime soon. ------");
@@ -866,91 +868,6 @@ namespace Cooking_TDF_Eq14
                 readerCreate = commandCreate.ExecuteReader();
                 readerCreate.Read();
                 readerCreate.Close();
-                connection.Close(); // --> CLOSE CO
-            }
-        }
-
-        static void PayCdR(MySqlConnection connection, SortedList<string, double> listRemuneration)
-        {
-            for (int i = 0; i < listRemuneration.Count(); i++)
-            {
-                connection.Open(); // --> OPEN CO
-                MySqlCommand commandPay = connection.CreateCommand();
-                commandPay.CommandText = "UPDATE client SET cook = cook + " + listRemuneration.ElementAt(i).Value + " WHERE codeClient = \"" + listRemuneration.ElementAt(i).Key + "\"; ";
-                MySqlDataReader readerPay;
-                readerPay = commandPay.ExecuteReader();
-                readerPay.Read();
-                readerPay.Close();
-                connection.Close(); // --> CLOSE CO
-            }
-        }
-
-        /// <summary>
-        /// Meal's price + 2 cook if its order exceed 10. And + 5 if it exceed 50 and CdR's remuneration = 4
-        /// </summary>
-        /// <param name="connection"></param>
-        /// <param name="listBasket">A sortedlist that contains all the meal of a certain order and its quantities</param>
-        static void UpdateMeal(MySqlConnection connection, SortedList<string, int> listBasket)
-        {
-            for (int i = 0; i < listBasket.Count(); i++)
-            {
-                int totalCommand = 0;
-                string codeM = listBasket.ElementAt(i).Key;
-                int quantity = listBasket.ElementAt(i).Value;
-
-                // Get total command
-                connection.Open(); // --> OPEN CO
-                MySqlCommand commandGet = connection.CreateCommand();
-                commandGet.CommandText = "SELECT nombreCommande fROM recette WHERE codeRecette = \"" + codeM + "\";";
-                MySqlDataReader readerGet;
-                readerGet = commandGet.ExecuteReader();
-                readerGet.Read();
-                totalCommand = readerGet.GetInt32(0);
-                readerGet.Close();
-                connection.Close(); // --> CLOSE CO
-
-                int newTotalCommand = totalCommand + quantity;
-                double plusCook = 0;
-                double plusRemuneration = 0;
-
-                if (totalCommand < 10 && newTotalCommand >= 10)
-                {
-                    plusCook = 2;
-                    // plus remuneration doesn't change
-                }
-                if (totalCommand < 50 && newTotalCommand >= 50)
-                {
-                    plusCook = 5;
-                    plusRemuneration = 4;
-                }
-
-                // update meal
-                connection.Open(); // --> OPEN CO
-                MySqlCommand commandUpdate = connection.CreateCommand();
-                commandUpdate.CommandText = "UPDATE recette SET prixR = prixR + " + plusCook + ", remuneration = remuneration + " + plusRemuneration + ", nombreCommande = " + newTotalCommand + " WHERE codeRecette = \"" + codeM + "\";";
-                MySqlDataReader readerUpdate;
-                readerUpdate = commandUpdate.ExecuteReader();
-                readerUpdate.Read();
-                readerUpdate.Close();
-                connection.Close(); // --> CLOSE CO
-            }
-        }
-        static void UpdateStock(MySqlConnection connection, SortedList<string, int> listBasket) // Stock of product decrease after an order
-        {
-            for (int i = 0; i < listBasket.Count(); i++)
-            {
-                string codeMeal = listBasket.ElementAt(i).Key;
-                int quantity = listBasket.ElementAt(i).Value;
-
-                connection.Open(); // --> OPEN CO
-
-                MySqlCommand commandCo = connection.CreateCommand();
-                commandCo.CommandText = "UPDATE produit p, constitutionRecette cr SET p.stock = p.stock - (cr.quantiteProduit * " + listBasket.ElementAt(i).Value + ") " +
-                                            "WHERE p.codeProduit = cr.codeProduit AND cr.codeRecette = \"" + listBasket.ElementAt(i).Key + "\";";
-                MySqlDataReader readerCo;
-                readerCo = commandCo.ExecuteReader();
-
-                readerCo.Close();
                 connection.Close(); // --> CLOSE CO
             }
         }
@@ -2009,16 +1926,16 @@ namespace Cooking_TDF_Eq14
             reader.Read();
             connection.Close(); // --> CLOSE CO
         }
-        
+
         #endregion
 
         #region Update
 
         static int DateDistance(string date)
         {
-            int year = Convert.ToInt32(date.Substring(6,1)) * 10 + Convert.ToInt32(date.Substring(7,1)) + 2000;
-            int month = Convert.ToInt32(date.Substring(3,1)) * 10 + Convert.ToInt32(date.Substring(4,1));
-            int day = Convert.ToInt32(date.Substring(0,1)) * 10 + Convert.ToInt32(date.Substring(1,1));
+            int year = Convert.ToInt32(date.Substring(6, 1)) * 10 + Convert.ToInt32(date.Substring(7, 1)) + 2000;
+            int month = Convert.ToInt32(date.Substring(3, 1)) * 10 + Convert.ToInt32(date.Substring(4, 1));
+            int day = Convert.ToInt32(date.Substring(0, 1)) * 10 + Convert.ToInt32(date.Substring(1, 1));
 
             DateTime enteredDate = new DateTime(year, month, day);
 
@@ -2026,7 +1943,6 @@ namespace Cooking_TDF_Eq14
 
             return Convert.ToInt32(delay.TotalDays);
         }
-
         static void Restocking(MySqlConnection connection) // Update stock min/max of the product that haven't been used for the last 30 days
         {
             connection.Open();
@@ -2062,12 +1978,119 @@ namespace Cooking_TDF_Eq14
                 reader.Read();
                 reader.Close();
             }
-            
+
             connection.Close();
         }
 
+        static bool Check()
+        {
+            DayOfWeek day = DateTime.Today.DayOfWeek;
+            int hour = DateTime.Now.Hour;
+            int minute = DateTime.Now.Minute;
+            int seconds = DateTime.Now.Second;
+
+            bool test = false;
+
+            if (day == DayOfWeek.Sunday)
+            {
+                if (hour == 23 && minute == 59 && seconds == 59)
+                {
+                    test = true;
+                }
+            }
+            return test;
+        }
+        static void UpdateWeeklyOrders(MySqlConnection connection) // Set the weekly order to 0 on sunday 11:59
+        {
+            MySqlDataReader reader;
+            connection.Open();
+
+            if (Check())
+            {
+                MySqlCommand update = connection.CreateCommand();
+                update.CommandText = "UPDATE recette SET nombreCommandeSemaine = 0;";
+                reader = update.ExecuteReader();
+                reader.Read();
+                reader.Close();
+            }
+            connection.Close();
+        }
+
+        /// <summary>
+        /// Update number of order for a meal (weekly included). Meal's price + 2 cook if its order exceed 10. And + 5 if it exceed 50 and CdR's remuneration = 4
+        /// </summary>
+        /// <param name="connection"></param>
+        /// <param name="listBasket">A sortedlist that contains all the meal of a certain order and its quantities</param>
+        static void UpdateMeal(MySqlConnection connection, SortedList<string, int> listBasket)
+        {
+            for (int i = 0; i < listBasket.Count(); i++)
+            {
+                int totalCommand = 0;
+                string codeM = listBasket.ElementAt(i).Key;
+                int quantity = listBasket.ElementAt(i).Value;
+
+                // Get total command
+                connection.Open(); // --> OPEN CO
+                MySqlCommand commandGet = connection.CreateCommand();
+                commandGet.CommandText = "SELECT nombreCommande fROM recette WHERE codeRecette = \"" + codeM + "\";";
+                MySqlDataReader readerGet;
+                readerGet = commandGet.ExecuteReader();
+                readerGet.Read();
+                totalCommand = readerGet.GetInt32(0);
+                readerGet.Close();
+                connection.Close(); // --> CLOSE CO
+
+                int newTotalCommand = totalCommand + quantity;
+                double plusCook = 0;
+                double plusRemuneration = 0;
+
+                if (totalCommand < 10 && newTotalCommand >= 10)
+                {
+                    plusCook = 2;
+                    // plus remuneration doesn't change
+                }
+                if (totalCommand < 50 && newTotalCommand >= 50)
+                {
+                    plusCook = 5;
+                    plusRemuneration = 4;
+                }
+
+                // update meal
+                connection.Open(); // --> OPEN CO
+                MySqlCommand commandUpdate = connection.CreateCommand();
+                commandUpdate.CommandText = "UPDATE recette SET prixR = prixR + " + plusCook + ", remuneration = remuneration + " + plusRemuneration + ", nombreCommande = " + newTotalCommand + ", nombreCommandeSemaine = nombreCommandeSemaine + " + quantity + " WHERE codeRecette = \"" + codeM + "\";";
+                MySqlDataReader readerUpdate;
+                readerUpdate = commandUpdate.ExecuteReader();
+                readerUpdate.Read();
+                readerUpdate.Close();
+                connection.Close(); // --> CLOSE CO
+            }
+        }
+        static void UpdateStock(MySqlConnection connection, SortedList<string, int> listBasket) // Stock of product decrease after an order
+        {
+            for (int i = 0; i < listBasket.Count(); i++)
+            {
+                string codeMeal = listBasket.ElementAt(i).Key;
+                int quantity = listBasket.ElementAt(i).Value;
+
+                // Update product last use date
+                UpdateProduct(connection, listBasket.ElementAt(i).Key);
+
+                connection.Open(); // --> OPEN CO
+
+                MySqlCommand commandCo = connection.CreateCommand();
+                commandCo.CommandText = "UPDATE produit p, constitutionRecette cr SET p.stock = p.stock - (cr.quantiteProduit * " + listBasket.ElementAt(i).Value + ") " +
+                                            "WHERE p.codeProduit = cr.codeProduit AND cr.codeRecette = \"" + listBasket.ElementAt(i).Key + "\";";
+                MySqlDataReader readerCo;
+                readerCo = commandCo.ExecuteReader();
+
+                readerCo.Close();
+                connection.Close(); // --> CLOSE CO
+            }
+        }
         static void UpdateProduct(MySqlConnection connection, string mealCode) // Update the last use date of a product
         {
+            connection.Open();
             MySqlDataReader reader;
             MySqlCommand infos = connection.CreateCommand();
             infos.CommandText = "SELECT codeProduit FROM constitutionRecette WHERE codeRecette = \"" + mealCode + "\";";
@@ -2079,7 +2102,8 @@ namespace Cooking_TDF_Eq14
             string month = Convert.ToString(today.Month);
             string year = Convert.ToString(today.Year - 2000);
             string date = day + "-" + month + "-" + year;
-            List<string> productCode = new List<string>(); 
+
+            List<string> productCode = new List<string>();
 
             while (reader.Read())
             {
@@ -2100,60 +2124,61 @@ namespace Cooking_TDF_Eq14
 
             connection.Close();
         }
-        static void Update(MySqlConnection connection, string orderNumber) // Update the weekly order of a meal and the total order of a CdR
+        
+        static void PayCdR(MySqlConnection connection, SortedList<string, double> listRemuneration)
         {
-            MySqlDataReader reader;
-            connection.Open();
-
-            MySqlCommand infos = connection.CreateCommand();
-            infos.CommandText = "SELECT codeRecette, quantiteRecette FROM constitutionPanier WHERE codeCommande = \"" + orderNumber + "\";";
-            reader = infos.ExecuteReader();
-            reader.Read();
-            List<string[]> toUpdate = new List<string[]>();
-            List<string[]> toUpdate2 = new List<string[]>();
-            string[] temp = new string[2];
-            string[] temp2 = new string[4];
-
-            while (reader.Read())
+            for (int i = 0; i < listRemuneration.Count(); i++)
             {
-                temp[0] = reader.GetString(0);
-                temp[1] = reader.GetString(1);
-                toUpdate.Add(temp);
+                connection.Open(); // --> OPEN CO
+                MySqlCommand commandPay = connection.CreateCommand();
+                commandPay.CommandText = "UPDATE client SET cook = cook + " + listRemuneration.ElementAt(i).Value + " WHERE codeClient = \"" + listRemuneration.ElementAt(i).Key + "\"; ";
+                MySqlDataReader readerPay;
+                readerPay = commandPay.ExecuteReader();
+                readerPay.Read();
+                readerPay.Close();
+                connection.Close(); // --> CLOSE CO
+            }
+        }
+        static void Update(MySqlConnection connection, SortedList<string, int> listBasket) // Update the total number of order of a CdR
+        {
+            SortedList<string, int> listOrderCdR = new SortedList<string, int>();
+
+            for (int i = 0; i < listBasket.Count(); i++)
+            {
+                string codeMeal = listBasket.ElementAt(i).Key;
+                int quantity = listBasket.ElementAt(i).Value;
+
+                connection.Open(); // --> OPEN CO
+                MySqlCommand commandCode = connection.CreateCommand();
+                commandCode.CommandText = "SELECT c.codeClient FROM client c, recette r WHERE r.codeClient = c.codeClient AND r.codeRecette = \"" + codeMeal + "\" ";
+                MySqlDataReader readerCode;
+                readerCode = commandCode.ExecuteReader();
+                readerCode.Read();
+
+                string codeC = readerCode.GetString(0);
+
+                try { listOrderCdR.Add(codeC, quantity); } // Cannot add twice the same key (code client)
+                catch
+                {
+                    int idx = listOrderCdR.IndexOfKey(codeC);
+                    int order = listOrderCdR.ElementAt(idx).Value + quantity;
+
+                    listOrderCdR[codeC] = order;                       
+                }
+                readerCode.Close();
+                connection.Close(); // --> CLOSE CO
             }
 
-            reader.Close();
-            MySqlCommand infos2 = connection.CreateCommand();
-
-            foreach (string[] line in toUpdate)
+            for (int i = 0; i < listOrderCdR.Count(); i++)
             {
-                infos2.CommandText = "SELECT codeClient, nombreCommandeSemaine, nombreCommande FROM recette WHERE codeRecette = \"" + line[0] + "\";";
-                reader = infos2.ExecuteReader();
-                reader.Read();
-                int weeklyOrders = reader.GetInt32(1) + Convert.ToInt32(line[1]);
-                int orders = reader.GetInt32(2) + Convert.ToInt32(line[1]);
-                string customerNumber = reader.GetString(0);
-                temp2[0] = Convert.ToString(weeklyOrders);
-                temp2[1] = Convert.ToString(orders);
-                temp2[2] = customerNumber;
-                temp2[3] = line[0];
-                toUpdate2.Add(temp2);
-                reader.Close();
-            }
-
-            MySqlCommand update1 = connection.CreateCommand();
-            MySqlCommand update2 = connection.CreateCommand();
-
-            foreach (string[] line in toUpdate2)
-            {
-                update1.CommandText = "UPDATE recette SET nombreCommandeSemaine = \"" + line[0] + "\", nombreCommande = \"" + line[1] + "\" WHERE codeRecette = \"" + line[3] + "\";";
-                reader = update1.ExecuteReader();
-                reader.Read();
-                reader.Close();
-                update2.CommandText = "UPDATE client SET nombreCommandeCdR = \"" + line[1] + "\" WHERE codeClient = \"" + line[2] + "\";";
-                reader = update2.ExecuteReader();
-                reader.Read();
-                reader.Close();
-                UpdateProduct(connection, line[3]);
+                connection.Open(); // --> OPEN CO
+                MySqlCommand commandUpdate = connection.CreateCommand();
+                commandUpdate.CommandText = "UPDATE client SET nombreCommandeCdR = nombreCommandeCdR + " + listOrderCdR.ElementAt(i).Value + " WHERE codeClient = \"" + listOrderCdR.ElementAt(i).Key + "\"; ";
+                MySqlDataReader readerUpdate;
+                readerUpdate = commandUpdate.ExecuteReader();
+                readerUpdate.Read();
+                readerUpdate.Close();
+                connection.Close(); // --> CLOSE CO
             }
         }
 
@@ -2161,7 +2186,7 @@ namespace Cooking_TDF_Eq14
 
         #region XML
 
-        public static void XmlStock(MySqlConnection connection)
+        public static void XmlStock(MySqlConnection connection) // Create an xml file with all the product that has a stock < minimal stock
         {
             XmlDocument docXml = new XmlDocument();
             XmlElement racine = docXml.CreateElement("stock_shortage");
@@ -2227,63 +2252,17 @@ namespace Cooking_TDF_Eq14
             string connectionString = "SERVER=localhost;PORT=3306;DATABASE=cooking;UID=cookingmama;PASSWORD=coco;";
             MySqlConnection connection = new MySqlConnection(connectionString);
 
+            #region Lauching update
+            Restocking(connection);
+            UpdateWeeklyOrders(connection);
 
-            Restocking(connection); // change stock min/max of the product that haven't been used for the last 30 days
-            UpdateWeeklyOrders(connection); // set all the weekly order to 0 on sunday 11:59
-
-            XmlStock(connection); // Create an xml file with all the product that has a stock < minimal stock
-
-
+            XmlStock(connection);
+            #endregion
 
             MainMenu(connection);
 
+
             Console.ReadKey();
-        }
-    }
-
-    public class Update
-    {
-        static bool Check()
-        {
-            DayOfWeek day = DateTime.Today.DayOfWeek;
-            int hour = DateTime.Now.Hour;
-            int minute = DateTime.Now.Minute;
-            int seconds = DateTime.Now.Second;
-
-            bool test = false;
-
-            if (day == DayOfWeek.Sunday)
-            {
-                if (hour == 23 && minute == 59 && seconds == 59)
-                {
-                    test = true;
-                }
-            }
-            return test;
-        }
-
-        static void UpdateWeeklyOrders(MySqlConnection connection) // Set the weekly order to 0 on sunday 11:59
-        {
-            MySqlDataReader reader;
-            connection.Open();
-
-            if (Check())
-            {
-                MySqlCommand update = connection.CreateCommand();
-                update.CommandText = "UPDATE recette SET nombreCommandeSemaine = 0;";
-                reader = update.ExecuteReader();
-                reader.Read();
-                reader.Close();
-            }
-            connection.Close();
-        }
-
-        static void UpdateMain(MySqlConnection connection)
-        {
-            while(true)
-            {
-                UpdateWeeklyOrders(connection);
-            }
         }
     }
 }
